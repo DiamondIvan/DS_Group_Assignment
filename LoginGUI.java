@@ -13,6 +13,9 @@ public class LoginGUI extends JFrame {
 
     private static final Map<String, String> librarianDatabase = new HashMap<>();
     private static final Map<String, String> studentDatabase = new HashMap<>();
+    
+    // Tracks the authenticated session user context string
+    private static String loggedInUsername = ""; 
 
     static {
         librarianDatabase.put("admin", "admin123");
@@ -20,7 +23,6 @@ public class LoginGUI extends JFrame {
     }
 
     public LoginGUI() {
-        // Read accounts list dynamically from file right away on startup
         LibraryStorage.loadUsers(librarianDatabase, studentDatabase);
 
         setTitle("Smart Library - Authentication Gateway");
@@ -61,7 +63,6 @@ public class LoginGUI extends JFrame {
         loginButton.setForeground(Color.WHITE);
         loginButton.setFocusPainted(false);
         
-        // --- IMPROVEMENT #4: Pressing 'Enter' triggers the Login button ---
         getRootPane().setDefaultButton(loginButton);
 
         registerButton = new JButton("Register");
@@ -78,6 +79,10 @@ public class LoginGUI extends JFrame {
 
         loginButton.addActionListener(e -> handleLogin());
         registerButton.addActionListener(e -> handleRegistration());
+    }
+
+    public static String getLoggedInUsername() {
+        return loggedInUsername;
     }
 
     private void handleLogin() {
@@ -99,11 +104,14 @@ public class LoginGUI extends JFrame {
         }
 
         if (isAuthenticated) {
+            loggedInUsername = username; 
+            
             JOptionPane.showMessageDialog(this, "Access Granted! Welcome back.", "Success", JOptionPane.INFORMATION_MESSAGE);
             this.dispose(); 
             
+            // Launch dashboard with specific role restriction parameters applied
             SwingUtilities.invokeLater(() -> {
-                LibraryGUI dashboard = new LibraryGUI();
+                LibraryGUI dashboard = new LibraryGUI(selectedRole); 
                 dashboard.setVisible(true);
             });
         } else {
@@ -126,7 +134,7 @@ public class LoginGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Librarian username already exists!", "Duplicate Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 librarianDatabase.put(username, password);
-                LibraryStorage.saveUsers(librarianDatabase, studentDatabase); // <-- SAVE ACTION HERE
+                LibraryStorage.saveUsers(librarianDatabase, studentDatabase);
                 JOptionPane.showMessageDialog(this, "Librarian profile registered successfully!", "Registration Success", JOptionPane.INFORMATION_MESSAGE);
                 clearInputs();
             }
@@ -135,13 +143,12 @@ public class LoginGUI extends JFrame {
                 JOptionPane.showMessageDialog(this, "Student username already exists!", "Duplicate Error", JOptionPane.ERROR_MESSAGE);
             } else {
                 studentDatabase.put(username, password);
-                LibraryStorage.saveUsers(librarianDatabase, studentDatabase); // <-- SAVE ACTION HERE
+                LibraryStorage.saveUsers(librarianDatabase, studentDatabase);
                 JOptionPane.showMessageDialog(this, "Student profile registered successfully!", "Registration Success", JOptionPane.INFORMATION_MESSAGE);
                 clearInputs();
             }
         }
     }
-
 
     private void clearInputs() {
         usernameField.setText("");
