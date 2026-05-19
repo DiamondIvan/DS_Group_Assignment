@@ -235,7 +235,7 @@ public class LibraryGUI extends JFrame {
                     for (int i = stack.size() - 1; i >= 0; i--) {
                         Book b = stack.get(i);
                         String rawAuthor = b.author;
-                        String borrowerName = "Unknown Context";
+                        String borrowerName = "Unknown";
                         
                         if (rawAuthor.contains(" [Borrowed by: ")) {
                             int index = rawAuthor.indexOf(" [Borrowed by: ");
