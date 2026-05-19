@@ -8,14 +8,13 @@ public class LibraryStorage {
     private static final String BOOKS_FILE = "books.csv";
     private static final String HISTORY_FILE = "history.csv";
 
-    // ============================================================
+    // ============================================================\
     // USER DATABASES (FILE I/O)
-    // ============================================================
+    // ============================================================\
     
     public static void loadUsers(Map<String, String> librarianDb, Map<String, String> studentDb) {
         File file = new File(USERS_FILE);
         if (!file.exists()) {
-            // Seed default values if the file doesn't exist yet
             librarianDb.put("admin", "admin123");
             studentDb.put("student", "pass123");
             saveUsers(librarianDb, studentDb);
@@ -39,7 +38,7 @@ public class LibraryStorage {
                 }
             }
         } catch (IOException e) {
-            System.err.println("Error reading users database: " + e.getMessage());
+            System.err.println("Error loading users: " + e.getMessage());
         }
     }
 
@@ -52,13 +51,13 @@ public class LibraryStorage {
                 pw.println("Student," + entry.getKey() + "," + entry.getValue());
             }
         } catch (IOException e) {
-            System.err.println("Error saving users database: " + e.getMessage());
+            System.err.println("Error saving users: " + e.getMessage());
         }
     }
 
-    // ============================================================
-    // CATALOGUE BST (FILE I/O)
-    // ============================================================
+    // ============================================================\
+    // CATALOGUE STORAGE (FILE I/O)
+    // ============================================================\
 
     public static void loadCatalogue(BookBST catalogue) {
         File file = new File(BOOKS_FILE);
@@ -76,30 +75,29 @@ public class LibraryStorage {
                 }
             }
         } catch (IOException | NumberFormatException e) {
-            System.err.println("Error loading book catalogue: " + e.getMessage());
+            System.err.println("Error loading catalogue: " + e.getMessage());
         }
     }
 
     public static void saveCatalogue(BookBST catalogue) {
         try (PrintWriter pw = new PrintWriter(new FileWriter(BOOKS_FILE))) {
-            // Helper method to write the BST structure out to file
-            writeBSTToFile(catalogue.getRoot(), pw);
+            saveCatalogueRec(catalogue.getRoot(), pw);
         } catch (IOException e) {
-            System.err.println("Error saving book catalogue: " + e.getMessage());
+            System.err.println("Error saving catalogue: " + e.getMessage());
         }
     }
 
-    private static void writeBSTToFile(Book node, PrintWriter pw) {
+    private static void saveCatalogueRec(Book node, PrintWriter pw) {
         if (node != null) {
+            saveCatalogueRec(node.left, pw);
             pw.println(node.isbn + "," + node.title + "," + node.author);
-            writeBSTToFile(node.left, pw);
-            writeBSTToFile(node.right, pw);
+            saveCatalogueRec(node.right, pw);
         }
     }
 
-    // ============================================================
-    // BORROW HISTORY STACK (FILE I/O)
-    // ============================================================
+    // ============================================================\
+    // UPDATED HISTORY STORAGE (Includes tracking who borrowed the book)
+    // ============================================================\
 
     public static void loadHistory(BorrowStack historyStack) {
         File file = new File(HISTORY_FILE);
@@ -107,15 +105,25 @@ public class LibraryStorage {
 
         try (BufferedReader br = new BufferedReader(new FileReader(file))) {
             String line;
-            // Clear current stack tracking context first
             historyStack.getUnderlyingStack().clear();
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
-                if (data.length == 3) {
+                // Support both legacy 3-field lines and updated 4-field lines
+                if (data.length >= 3) {
                     int isbn = Integer.parseInt(data[0].trim());
                     String title = data[1].trim();
                     String author = data[2].trim();
-                    historyStack.push(new Book(isbn, title, author));
+                    String borrowedBy = (data.length == 4) ? data[3].trim() : "Unknown Student";
+                    
+                    Book book = new Book(isbn, title, author);
+                    // Use the left pointer temporarily as a dynamic container variable 
+                    // or override a string property if needed. To keep compile safety 
+                    // without altering Book.java, we encode user details using custom formatting or a dummy node.
+                    // Instead, we can hijack the author string or save it cleanly.
+                    // Let's attach the borrower name to the author field temporarily when loading back into a basic Book node:
+                    book.author = author + " [Borrowed by: " + borrowedBy + "]";
+                    
+                    historyStack.push(book);
                 }
             }
         } catch (IOException | NumberFormatException e) {
@@ -126,9 +134,18 @@ public class LibraryStorage {
     public static void saveHistory(BorrowStack historyStack) {
         try (PrintWriter pw = new PrintWriter(new FileWriter(HISTORY_FILE))) {
             Stack<Book> stack = historyStack.getUnderlyingStack();
-            // Write from oldest to newest so it reads back in exact matching layout order
             for (Book book : stack) {
-                pw.println(book.isbn + "," + book.title + "," + book.author);
+                // If it already has "[Borrowed by:", parse it out clean to keep csv integrity
+                String authorClean = book.author;
+                String borrower = "Unknown";
+                
+                if (authorClean.contains(" [Borrowed by: ")) {
+                    int idx = authorClean.indexOf(" [Borrowed by: ");
+                    borrower = authorClean.substring(idx + 15, authorClean.length() - 1);
+                    authorClean = authorClean.substring(0, idx);
+                }
+                
+                pw.println(book.isbn + "," + book.title + "," + authorClean + "," + borrower);
             }
         } catch (IOException e) {
             System.err.println("Error saving borrow history: " + e.getMessage());
