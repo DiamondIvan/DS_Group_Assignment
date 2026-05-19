@@ -11,7 +11,7 @@ interface LibraryADT {
     void addBook(int isbn, String title, String author);
 
     /** Borrows a book by ISBN and records it in the history. */
-    void borrowBook(int isbn);
+    void borrowBook(int isbn, String username);
 
     /** Displays the most recently borrowed books first. */
     void viewLatestHistory();

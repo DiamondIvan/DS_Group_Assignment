@@ -26,24 +26,26 @@ class BorrowStack {
         stack.push(book);
     }
 
+    public Stack<Book> getUnderlyingStack() {
+        return this.stack;
+    }
+
     /**
      * Prints borrow history newest-first by iterating backward
      * through the stack (index size()-1 down to 0).
      * Prints "History is empty." when no books have been borrowed.
+     * @return 
      */
     public void show() {
         if (stack.isEmpty()) {
             System.out.println("History is empty.");
-            return;
+        }else {
+            // Reverse iteration to show most recent first
+            System.out.println("\n--- Borrow History (Most Recent First) ---");
+            for (int i = stack.size() - 1; i >= 0; i--) {
+                Book b = stack.get(i);
+                System.out.printf("[ISBN: " + b.isbn + "]" + b.title + "%n");
+            }
         }
-
-        System.out.println("\n--- Borrow History (Most Recent First) ---");
-        // Iterate backward so the most-recently-pushed book comes first
-        for (int i = stack.size() - 1; i >= 0; i--) {
-            Book b = stack.get(i);
-            System.out.printf("  ISBN: %d | Title: %s | Author: %s%n",
-                    b.isbn, b.title, b.author);
-        }
-        System.out.println("------------------------------------------");
     }
 }

@@ -31,6 +31,12 @@ class SmartLibrary implements LibraryADT {
 
     // ── LibraryADT Implementation ────────────────────────────
 
+    public SmartLibrary() {
+        // Automatically fetch persistent records from local data files
+        LibraryStorage.loadCatalogue(catalogue);
+        LibraryStorage.loadHistory(history);
+    }
+
     /**
      * Creates a new Book and inserts it into the BST catalogue.
      */
@@ -46,13 +52,19 @@ class SmartLibrary implements LibraryADT {
      * If not found, an informative message is printed.
      */
     @Override
-    public void borrowBook(int isbn) {
-        Book found = catalogue.search(isbn);
-        if (found != null) {
-            history.push(found);
-            System.out.printf("You have borrowed \"%s\".%n", found.title);
+    public void borrowBook(int isbn, String username) {
+        Book targetBook = catalogue.search(isbn);
+
+        if (targetBook != null) {
+            // 1. Remove structurally from the Binary Search Tree
+            catalogue.delete(isbn);
+        
+            // 2. Push onto the LIFO tracking stack
+            history.push(targetBook);
+
+            System.out.println("[Success] '" + targetBook.title + "' checked out to user: " + username);
         } else {
-            System.out.println("Book not in catalogue.");
+            System.out.println("[Error] Book with ISBN " + isbn + " not found in system.");
         }
     }
 
@@ -73,8 +85,7 @@ class SmartLibrary implements LibraryADT {
     public void searchBook(int isbn) {
         Book found = catalogue.search(isbn);
         if (found != null) {
-            System.out.printf("Found: %s (Author: %s)%n",
-                    found.title, found.author);
+            System.out.printf("Found: %s (Author: %s)%n", found.title, found.author);
         } else {
             System.out.println("Not Found.");
         }
@@ -172,7 +183,15 @@ class SmartLibrary implements LibraryADT {
                 int borrowIsbn = readIsbn("Enter ISBN to borrow: ");
                 if (borrowIsbn == -1)
                     return true;
-                borrowBook(borrowIsbn);
+
+                System.out.print("Enter username  : ");
+                String username = sc.nextLine().trim();
+                if (username.isEmpty()) {
+                    System.out.println("[Error] Username cannot be empty.");
+                    break;
+                }
+
+                borrowBook(borrowIsbn, username);
                 break;
 
             case 4: // ── View History ───────────────────────
@@ -208,5 +227,13 @@ class SmartLibrary implements LibraryADT {
             sc.nextLine(); // clear the buffer regardless of success/failure
         }
         return isbn;
+    }
+
+    public BookBST getCatalogue() { 
+        return this.catalogue; 
+    }
+
+    public BorrowStack getHistory() {  
+        return this.history; 
     }
 }
