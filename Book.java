@@ -8,12 +8,10 @@
  */
 class Book {
     int isbn;
-    String title;
-    String author;
+    String title, author;
 
     // BST child pointers (used by BookBST only)
-    Book left;
-    Book right;
+    Book left,right;
 
     /**
      * Constructs a Book with the given details.
