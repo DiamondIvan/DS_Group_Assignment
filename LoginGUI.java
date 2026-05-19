@@ -23,6 +23,7 @@ public class LoginGUI extends JFrame {
     }
 
     public LoginGUI() {
+        // Read accounts list dynamically from file right away on startup
         LibraryStorage.loadUsers(librarianDatabase, studentDatabase);
 
         setTitle("Smart Library - Authentication Gateway");
@@ -83,6 +84,11 @@ public class LoginGUI extends JFrame {
 
     public static String getLoggedInUsername() {
         return loggedInUsername;
+    }
+
+    // Public getter so LibraryGUI can verify if a student username exists
+    public static Map<String, String> getStudentDatabase() {
+        return studentDatabase;
     }
 
     private void handleLogin() {

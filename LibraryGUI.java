@@ -10,34 +10,28 @@ public class LibraryGUI extends JFrame {
     private final JTextArea displayArea;
     private final JTable bookTable;
     private final DefaultTableModel tableModel;
-    private final String userRole; // Tracks the logged-in role ("Librarian" or "Student")
+    private final String userRole;
 
-    // Constructor accepts the user's role from LoginGUI
     public LibraryGUI(String role) {
         this.userRole = role;
-        
-        // 1. Initialize the backend engine (automatically loads storage data)
         library = new SmartLibrary();
 
-        // 2. Setup Frame / Layout Geometry
         setTitle("Smart Library Management System - (" + userRole + ")");
         setSize(850, 600); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // Center window on user screen
+        setLocationRelativeTo(null); 
         setLayout(new BorderLayout(10, 10));
 
-        // 3. Header Title Block Layout
         JLabel headerLabel = new JLabel("Smart Library Management Dashboard (" + userRole + ")", JLabel.CENTER);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 18));
         headerLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
         add(headerLabel, BorderLayout.NORTH);
 
-        // 4. JTable Setup (Top Component of Split Frame View)
         String[] columnNames = {"ISBN", "Title", "Author"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
-                return false; // Prevent users from altering table cells directly
+                return false; 
             }
         };
         bookTable = new JTable(tableModel);
@@ -48,10 +42,8 @@ public class LibraryGUI extends JFrame {
         JScrollPane tableScrollPane = new JScrollPane(bookTable);
         tableScrollPane.setBorder(BorderFactory.createTitledBorder("Available Library Stock Catalogue"));
 
-        // Load visual records into table straight from the loaded backend BST data
         populateTableFromBST(library.getCatalogue().getRoot());
 
-        // 5. Text Terminal Monitor Setup (Bottom Component of Split Frame View)
         displayArea = new JTextArea();
         displayArea.setEditable(false);
         displayArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
@@ -60,13 +52,11 @@ public class LibraryGUI extends JFrame {
         JScrollPane consoleScrollPane = new JScrollPane(displayArea);
         consoleScrollPane.setBorder(BorderFactory.createTitledBorder("System Operations Log Console"));
 
-        // Split view combination container
         JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tableScrollPane, consoleScrollPane);
         splitPane.setDividerLocation(220); 
         splitPane.setBorder(BorderFactory.createEmptyBorder(0, 5, 15, 15));
         add(splitPane, BorderLayout.CENTER);
 
-        // 6. Action Control Sidebar Buttons Setup
         JPanel buttonPanel = new JPanel();
         
         JButton btnAdd = new JButton("Add Book");
@@ -77,27 +67,23 @@ public class LibraryGUI extends JFrame {
         JButton btnExit = new JButton("Exit System");
 
         Dimension buttonSize = new Dimension(145, 42);
-        
-        // Formulate authorized list of buttons dynamically depending on rules
         java.util.List<JButton> authorizedButtons = new java.util.ArrayList<>();
         
         boolean isStudent = "Student".equalsIgnoreCase(userRole);
         
         if (!isStudent) {
-            authorizedButtons.add(btnAdd);     // Librarians get Add Book
+            authorizedButtons.add(btnAdd); 
         }
-        
-        authorizedButtons.add(btnSearch);      // Both get Search
-        authorizedButtons.add(btnBorrow);      // Both get Borrow
+        authorizedButtons.add(btnSearch);      
+        authorizedButtons.add(btnBorrow);      
         
         if (!isStudent) {
-            authorizedButtons.add(btnHistory); // Only Librarians get View History
+            authorizedButtons.add(btnHistory); 
         }
         
-        authorizedButtons.add(btnClear);       // Both get Clear
-        authorizedButtons.add(btnExit);        // Both get Exit
+        authorizedButtons.add(btnClear);       
+        authorizedButtons.add(btnExit);        
 
-        // Dynamically adjust grid rows to fit only authorized buttons tightly
         buttonPanel.setLayout(new GridLayout(authorizedButtons.size(), 1, 5, 12)); 
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 15, 15, 5));
 
@@ -107,22 +93,23 @@ public class LibraryGUI extends JFrame {
             btn.setFocusPainted(false);
 
             if (btn == btnExit) {
-                btn.setBackground(new Color(178, 34, 34)); // Firebrick Red
+                btn.setBackground(new Color(178, 34, 34)); 
                 btn.setForeground(Color.WHITE); 
             } else if (btn == btnClear) {
-                btn.setBackground(new Color(105, 105, 105)); // Dim Gray
+                btn.setBackground(new Color(105, 105, 105)); 
                 btn.setForeground(Color.WHITE);
             } else {
-                btn.setBackground(new Color(0, 104, 56)); // Forest Green
+                btn.setBackground(new Color(0, 104, 56)); 
                 btn.setForeground(Color.WHITE); 
             }
             buttonPanel.add(btn);
         }
         add(buttonPanel, BorderLayout.WEST);
 
-        // 7. Interactive Controls Actions Wire-up
+        // ============================================================\
+        // ACTIONS WIRING
+        // ============================================================\
 
-        // ADD BOOK BUTTON (Only processed if UI added it)
         btnAdd.addActionListener(e -> {
             JPanel inputFormPanel = new JPanel(new GridLayout(3, 2, 5, 10));
             JTextField isbnField = new JTextField();
@@ -146,7 +133,7 @@ public class LibraryGUI extends JFrame {
                     String author = authorField.getText().trim();
 
                     if (isbnStr.isEmpty() || title.isEmpty() || author.isEmpty()) {
-                        JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] All fields are mandatory.", "Entry Warning", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] All fields are mandatory.", "Warning", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
@@ -156,12 +143,11 @@ public class LibraryGUI extends JFrame {
                     LibraryStorage.saveCatalogue(library.getCatalogue());
 
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must strictly be an integer!", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must be an integer!", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
-        // SEARCH BOOK BUTTON
         btnSearch.addActionListener(e -> {
             try {
                 String isbnStr = JOptionPane.showInputDialog(LibraryGUI.this, "Enter Book ISBN to search catalogue:");
@@ -171,17 +157,15 @@ public class LibraryGUI extends JFrame {
                 runLibraryCommand(() -> library.searchBook(isbn));
                 
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must be an integer!", "Input Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must be an integer!", "Error", JOptionPane.ERROR_MESSAGE);
             }
         });
 
-        // BORROW BOOK BUTTON
         btnBorrow.addActionListener(e -> {
             JPanel borrowPanel = new JPanel(new GridLayout(2, 2, 5, 10));
             JTextField isbnField = new JTextField();
             JTextField userField = new JTextField();
 
-            // Auto-fills and locks down username input box if logged-in user is a Student
             if (isStudent) {
                 userField.setText(LoginGUI.getLoggedInUsername()); 
                 userField.setEditable(false);
@@ -201,33 +185,71 @@ public class LibraryGUI extends JFrame {
                     String username = userField.getText().trim();
 
                     if (isbnStr.isEmpty() || username.isEmpty()) {
-                        JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] Both fields are required.", "Input Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] Both fields are required.", "Error", JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
+                    // CRITICAL VALIDATION: Check if the username exists within the registered Student Database
+                    if (!LoginGUI.getStudentDatabase().containsKey(username)) {
+                        JOptionPane.showMessageDialog(LibraryGUI.this, 
+                            "[Access Denied] The username '" + username + "' is not a registered student profile!\nTransaction canceled.", 
+                            "Authentication Error", JOptionPane.ERROR_MESSAGE);
+                        return; 
+                    }
+
                     int isbn = Integer.parseInt(isbnStr);
+                    
+                    // Verify book existence in catalogue before executing checkout mutations
+                    Book bookToBorrow = library.getCatalogue().search(isbn);
+                    if (bookToBorrow == null) {
+                        runLibraryCommand(() -> library.borrowBook(isbn, username)); // Will print fallback "not found" tracking logs to console area
+                        return;
+                    }
+
+                    // Tag the author field with the student name before pushing to history
+                    bookToBorrow.author = bookToBorrow.author + " [Borrowed by: " + username + "]";
+
                     runLibraryCommand(() -> library.borrowBook(isbn, username));
             
                     LibraryStorage.saveCatalogue(library.getCatalogue());
                     LibraryStorage.saveHistory(library.getHistory());
             
-                    // Refresh view grid table
                     tableModel.setRowCount(0);
                     populateTableFromBST(library.getCatalogue().getRoot());
             
                 } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must be an integer!", "Input Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(LibraryGUI.this, "[Error] ISBN must be an integer!", "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
 
-        // HISTORY VIEWER BUTTON
-        btnHistory.addActionListener(e -> runLibraryCommand(library::viewLatestHistory));
+        btnHistory.addActionListener(e -> {
+            runLibraryCommand(() -> {
+                java.util.Stack<Book> stack = library.getHistory().getUnderlyingStack();
+                if (stack.isEmpty()) {
+                    System.out.println("History log data is currently empty.");
+                } else {
+                    System.out.println("\n======================================= DETAILED BORROW HISTORY (LIFO) =======================================");
+                    System.out.printf("%-10s | %-30s | %-25s | %-20s%n", "ISBN", "TITLE", "AUTHOR", "BORROWED BY");
+                    System.out.println("--------------------------------------------------------------------------------------------------------------");
+                    for (int i = stack.size() - 1; i >= 0; i--) {
+                        Book b = stack.get(i);
+                        String rawAuthor = b.author;
+                        String borrowerName = "Unknown Context";
+                        
+                        if (rawAuthor.contains(" [Borrowed by: ")) {
+                            int index = rawAuthor.indexOf(" [Borrowed by: ");
+                            borrowerName = rawAuthor.substring(index + 15, rawAuthor.length() - 1);
+                            rawAuthor = rawAuthor.substring(0, index);
+                        }
+                        System.out.printf("%-10d | %-30s | %-25s | %-20s%n", b.isbn, b.title, rawAuthor, borrowerName);
+                    }
+                    System.out.println("==============================================================================================================");
+                }
+            });
+        });
 
-        // CONSOLE WIPE BUTTON
         btnClear.addActionListener(e -> displayArea.setText(""));
-
-        // TERMINATION BUTTON
         btnExit.addActionListener(e -> System.exit(0));
     }
 
@@ -248,7 +270,6 @@ public class LibraryGUI extends JFrame {
         try {
             libraryTask.run();
         } finally {
-            System.out.flush();
             System.setOut(standardConsoleOut); 
         }
         
